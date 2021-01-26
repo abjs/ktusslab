@@ -1,13 +1,8 @@
 #include <stdio.h>
-int null2D(int a[30][25], int, int);
-int cmp(int a[], int b[], int);
-void setzero(int a[], int);
-void add(int a[], int b[], int);
-int zeros(int a[], int);
 int main()
 {
-    int numberofResource, numberofProcess, i, j, c, tempc, count, flag;
-    int resourceArray[25], Total[25], avl[25], allocation[30][25], maxNeed[30][25], avilable[30][25], remianingNeed[30][25], sequence[25];
+    int numberofResource, numberofProcess, i, j, c, count1 = 0, pscount = 0, count, flag=0;
+    int resourceArray[25], Total[25], avl[25], allocation[30][25], maxNeed[30][25], avilable[30][25], remianingNeed[30][25], sequence[25], sumAllocation[50], remAvailable[50], processList[50];
     char processLetter = 'A';
     printf("Enter The number of Resorces:");
     scanf("%d", &numberofResource);
@@ -39,151 +34,116 @@ int main()
             scanf("%d", &maxNeed[i][j]);
         }
     }
-    for (j = 0; j < numberofResource; j++)
+    for (i = 0; i < numberofResource; i++)
     {
-        Total[j] = 0;
+        sumAllocation[i] = 0;
     }
     for (i = 0; i < numberofProcess; i++)
     {
         for (j = 0; j < numberofResource; j++)
         {
-            Total[j] += allocation[i][j];
+            sumAllocation[j] += allocation[i][j];
         }
     }
-    for (int i = 0; i < numberofProcess; i++)
+    for (j = 0; j < numberofResource; j++)
     {
 
-        for (int j = 0; j < numberofResource; j++)
-        {
-
-            remianingNeed[i][j] = maxNeed[i][j] - allocation[i][j];
-        }
+        remAvailable[j] = resourceArray[j] - sumAllocation[j];
     }
-    for (i = 0; i < numberofResource; i++)
-    {
-        avilable[0][i] = resourceArray[i] - Total[i];
-        avl[i] = resourceArray[i] - Total[i];
-    }
-    printf("\n\nTotal  Avilable Resource\n");
-    for (int i = 0; i < numberofResource; i++)
-        printf("\nResource %c is : %d", processLetter + i, resourceArray[i]);
-    printf("\n\nNow Availabil\n");
-    for (i = 0; i < numberofResource; i++)
-        printf("Avalivable Resource For %c : %d\n", processLetter + i, avl[i]);
+    printf("\n");
+    // for (j = 0; j < numberofResource; j++)
+    // {
+    //     printf("%d", remAvailable[j]);
+    // }
 
-    printf("\n\nAllocation\n");
     for (i = 0; i < numberofProcess; i++)
     {
-        printf("\n");
+        for (j = 0; j < numberofResource; j++)
+        {
+            remianingNeed[i][j] = maxNeed[i][j] - allocation[i][j];
+        }
+        remianingNeed[i][numberofResource] = 0;
+    }
+    printf("\n   Allocated \t\t\t Max Need \t\t\t Remianing Need\n\n");
+    for (i = 0; i < numberofProcess; i++)
+    {
+      
         for (j = 0; j < numberofResource; j++)
         {
             printf("%d\t", allocation[i][j]);
         }
-    }
-    printf("\n\nMax Need\n");
-    for (i = 0; i < numberofProcess; i++)
-    {
-        printf("\n");
+        printf("\t");
         for (j = 0; j < numberofResource; j++)
         {
             printf("%d\t", maxNeed[i][j]);
         }
-    }
-    printf("\n\nRemaing Need\n");
-    for (i = 0; i < numberofProcess; i++)
-    {
-        printf("\n");
+        printf("\t");
         for (j = 0; j < numberofResource; j++)
         {
             printf("%d\t", remianingNeed[i][j]);
         }
+        printf("\n");
     }
-
-    count = 0;
-    while (null2D(remianingNeed, numberofResource, numberofProcess))
+    for (int i = 0; i < numberofResource; i++)
+    {
+        printf("\nAvailable  Resource %c :%d", processLetter + i,resourceArray[i]);
+        printf("\nAlready Allocated Resource %c :%d", processLetter + i,sumAllocation[i]);
+        printf("\nRemianing  Resource %c :%d", processLetter + i,remAvailable[i]);
+    }
+    while (1)
     {
         for (i = 0; i < numberofProcess; i++)
         {
-            if (cmp(avl, remianingNeed[i], numberofResource))
+            count = 0;
+            for (j = 0; j < numberofResource; j++)
             {
-                if (zeros(remianingNeed[i], numberofResource))
-                {
-                    sequence[count] = i + 1;
+                if (remAvailable[j] >= remianingNeed[i][j])
                     count++;
-                }
+            }
+            if (remianingNeed[i][numberofResource] == 1)
+            {
+                count--;
+            }
+            if (count == numberofResource)
+            {
+                // printf("\nresource used %d\t", i);
+                remianingNeed[i][numberofResource] = 1;
+                count1++;
+                processList[pscount]=i+1;
+                pscount++;
+                // printf("P%d \t", i + 1);
 
-                setzero(remianingNeed[i], numberofResource);
-                add(avl, allocation[i], numberofResource);
-                setzero(allocation[i], numberofResource);
+                for (j = 0; j < numberofResource; j++)
+                {
+                    remAvailable[j] += allocation[i][j];
+                }
             }
         }
-    }
-
-    for (i = 0; i < numberofResource; i++)
-        printf("\nNow avalivable Resource For %c : %d\n", processLetter + i, avl[i]);
-
-    printf("\n=======================================\n");
-    if (null2D(remianingNeed, numberofResource, numberofProcess) == 0)
-        printf("No deadlock occurrence\n");
-    printf("\n=======================================\n");
-    printf("Safe Sequence Is");
-    printf("\n");
-    for (i = 0; i < count; i++)
-        printf("P%d\t", sequence[i]);
-    printf("\n=======================================\n");
-    return 0;
-}
-
-int null2D(int a[30][25], int x, int y)
-{
-    int count = 0;
-    for (int i = 0; i < x; i++)
-    {
-        for (int j = 0; j < y; j++)
-        {
-            if (a[i][j] > 0)
-                count++;
+      
+        if (count1 == numberofProcess)
+            break;
+        flag++;
+        if (flag > numberofProcess){
+            break;
         }
+       
     }
-    if (count == 0)
-        return 0;
-    else
-        return 1;
-}
-int cmp(int a[], int b[], int x)
-{
-    int result = 0, i = 0;
-    while (i < x)
+    printf("\n\n");
+
+
+    if( flag <= numberofProcess)
     {
-        if (a[i] >= b[i])
-            result++;
-        i++;
+        printf("Order:");
+        for(i=0; i<numberofProcess; i++)
+                printf("P%d\t",  processList[i]);
     }
-    if (result == x)
-        return 1;
-    else
-        return 0;
-}
-void setzero(int a[], int y)
-{
-    for (int i = 0; i < y; i++)
-        a[i] = 0;
-}
-void add(int a[], int b[], int x)
-{
-    for (int i = 0; i < x; i++)
-    {
-        a[i] += b[i];
+    else{
+            printf("\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n|\t     Dead lock occured\t\t|\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n");
+
     }
+    printf("\n");
 }
-int zeros(int a[], int x)
-{
-    int count = 0;
-    for (int i = 0; i < x; i++)
-        if (a[i] == 0)
-            count++;
-    if (count < x)
-        return 1;
-    else
-        return 0;
-}
+
+
+// 3 10 5 7  5   0 1 0 2 0 0 3 0 2 2 1 1 0 0 2 7 5 3 3 2 2 9 0 2 4 2 2 5 3 3
+//3 10 5 7  5   0 1 0 2 0 0 3 0 2 2 1 1 0 0 4 7 5 3 3 2 2 9 20 2 4 2 2 5 3 3
